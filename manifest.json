@@ -1,0 +1,16 @@
+{
+  "name": "Controle de Salgados",
+  "short_name": "Salgados",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff5e6",
+  "theme_color": "#e67e22",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
