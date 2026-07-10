@@ -31,12 +31,13 @@
         .card-total h3 { color: white; border-bottom: none; opacity: 0.9; margin-bottom: 5px; padding-bottom: 0; }
         .total-valor { font-size: 2.5rem; font-weight: 600; margin: 0; text-shadow: 1px 2px 4px rgba(0,0,0,0.2); }
 
-        input, input[type="file"] { 
+        /* NOVO: CSS ajustado para o filtro (select) */
+        input, select, input[type="file"] { 
             font-family: 'Poppins', sans-serif; padding: 12px; margin: 8px 0; 
             width: 100%; box-sizing: border-box; border: 1px solid #ddd; 
             border-radius: 8px; background-color: #fafafa; 
         }
-        input:focus { border-color: #e67e22; outline: none; background-color: #fff; }
+        input:focus, select:focus { border-color: #e67e22; outline: none; background-color: #fff; }
         
         button { font-family: 'Poppins', sans-serif; font-weight: 600; padding: 12px; width: 100%; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; margin-top: 10px;}
         
@@ -58,6 +59,9 @@
         .mensagem-vazia { text-align: center; color: #999; font-style: italic; padding: 10px 0; font-size: 0.9rem; }
         
         .flex-row { display: flex; gap: 10px; }
+        .cabecalho-historico { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ffeed9; padding-bottom: 10px; margin-bottom: 15px; }
+        .cabecalho-historico h3 { border: none; padding: 0; margin: 0; }
+        .cabecalho-historico select { width: auto; padding: 5px 10px; margin: 0; font-size: 0.9rem; border-color: #e67e22; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -72,10 +76,7 @@
 
         <div class="card">
             <h3>Nova Venda</h3>
-            <!-- Melhoria: O 'list' liga este campo ao datalist abaixo -->
             <input type="text" id="nomeCliente" placeholder="Nome do Cliente (ex: João)" list="sugestoesClientes" autocomplete="off">
-            
-            <!-- Lista invisível que o navegador usa para gerar as sugestões -->
             <datalist id="sugestoesClientes"></datalist>
 
             <div class="flex-row">
@@ -91,8 +92,14 @@
         </div>
 
         <div class="card">
-            <h3>Histórico (Já Recebidos)</h3>
-            <p style="text-align: center; margin: 0; color: #27ae60; font-weight: bold; font-size: 1.2rem;" id="totalRecebidoMes">Já Faturado: R$ 0,00</p>
+            <div class="cabecalho-historico">
+                <h3>Histórico</h3>
+                <select id="filtroMes" onchange="atualizarTela()">
+                    <option value="todos">Todos</option>
+                </select>
+            </div>
+            
+            <p style="text-align: center; margin: 0; color: #27ae60; font-weight: bold; font-size: 1.2rem;" id="totalRecebidoMes">Faturado: R$ 0,00</p>
             <div id="listaHistorico"></div>
         </div>
 
@@ -110,13 +117,9 @@
         let vendas = JSON.parse(localStorage.getItem('vendasSalgados')) || {};
         let historico = JSON.parse(localStorage.getItem('historicoSalgados')) || [];
 
-        // NOVO: Função que padroniza o texto (remove espaços extras e coloca primeira letra maiúscula)
         function padronizarNome(texto) {
-            return texto
-                .trim() // Tira espaços do começo e fim
-                .replace(/\s+/g, ' ') // Se tiver 2 espaços juntos no meio, transforma em 1
-                .toLowerCase() // Deixa tudo minúsculo
-                .replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); }); // Deixa a 1ª letra de cada palavra maiúscula
+            return texto.trim().replace(/\s+/g, ' ').toLowerCase()
+                .replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
         }
 
         function adicionarVenda() {
@@ -130,7 +133,6 @@
                 return;
             }
 
-            // Aplica a padronização antes de salvar!
             let nome = padronizarNome(nomeBruto);
 
             if (vendas[nome]) {
@@ -173,24 +175,24 @@
             let totalReceberElem = document.getElementById('totalReceber');
             let totalRecebidoElem = document.getElementById('totalRecebidoMes');
             let datalistSugestoes = document.getElementById('sugestoesClientes');
+            let selectMes = document.getElementById('filtroMes'); // Captura o filtro de meses
 
             lista.innerHTML = ''; 
             listaHist.innerHTML = '';
-            datalistSugestoes.innerHTML = ''; // Limpa as sugestões para recriar
+            datalistSugestoes.innerHTML = '';
 
             let somaReceber = 0;
-            let somaRecebido = 0;
-            
-            // NOVO: Coleta todos os nomes únicos (dos pendentes e do histórico) para criar as sugestões
             let nomesSugeridos = new Set();
+            let mesesDisponiveis = new Set();
 
+            // --- 1. PROCESSA PENDENTES ---
             if (Object.keys(vendas).length === 0) {
                 lista.innerHTML = '<p class="mensagem-vazia">Nenhuma dívida pendente. Que venham mais vendas! 🚀</p>';
             } else {
                 for (let cliente in vendas) {
                     let dados = vendas[cliente];
                     somaReceber += dados.valorTotal;
-                    nomesSugeridos.add(cliente); // Adiciona na lista de sugestões
+                    nomesSugeridos.add(cliente);
                     
                     lista.innerHTML += `
                         <div class="cliente-item">
@@ -208,13 +210,59 @@
             }
             totalReceberElem.innerText = `R$ ${somaReceber.toFixed(2).replace('.', ',')}`;
 
-            if (historico.length === 0) {
-                listaHist.innerHTML = '<p class="mensagem-vazia">Nenhum recebimento registado ainda.</p>';
+            // --- 2. PREPARA DADOS DO HISTÓRICO ---
+            historico.forEach(item => {
+                nomesSugeridos.add(item.nome); // Garante que clientes antigos continuem no autocomplete
+                let partes = item.data.split('/');
+                if(partes.length === 3) {
+                    mesesDisponiveis.add(partes[1] + '/' + partes[2]); // Extrai Mês/Ano (Ex: 07/2026)
+                }
+            });
+
+            // Cria as opções do filtro com os meses encontrados
+            let mesSelecionado = selectMes.value || 'todos';
+            selectMes.innerHTML = '<option value="todos">Todos</option>';
+            const nomesDosMeses = {'01':'Jan', '02':'Fev', '03':'Mar', '04':'Abr', '05':'Mai', '06':'Jun', '07':'Jul', '08':'Ago', '09':'Set', '10':'Out', '11':'Nov', '12':'Dez'};
+            
+            // Ordena os meses do mais recente para o mais antigo
+            let mesesArray = Array.from(mesesDisponiveis).sort((a, b) => {
+                let [mA, aA] = a.split('/');
+                let [mB, aB] = b.split('/');
+                return new Date(aB, mB - 1) - new Date(aA, mA - 1);
+            });
+
+            mesesArray.forEach(mesAno => {
+                let [m, a] = mesAno.split('/');
+                let option = document.createElement('option');
+                option.value = mesAno;
+                option.text = `${nomesDosMeses[m]}/${a}`;
+                selectMes.appendChild(option);
+            });
+
+            // Mantém a seleção que o usuário fez antes de atualizar a tela
+            if (mesesDisponiveis.has(mesSelecionado) || mesSelecionado === 'todos') {
+                selectMes.value = mesSelecionado;
             } else {
-                let histInvertido = [...historico].reverse();
+                selectMes.value = 'todos';
+                mesSelecionado = 'todos';
+            }
+
+            // --- 3. EXIBE HISTÓRICO FILTRADO ---
+            let historicoFiltrado = historico;
+            if (mesSelecionado !== 'todos') {
+                historicoFiltrado = historico.filter(item => {
+                    let partes = item.data.split('/');
+                    return (partes[1] + '/' + partes[2]) === mesSelecionado;
+                });
+            }
+
+            let somaRecebido = 0;
+            if (historicoFiltrado.length === 0) {
+                listaHist.innerHTML = '<p class="mensagem-vazia">Nenhum recebimento registado neste período.</p>';
+            } else {
+                let histInvertido = [...historicoFiltrado].reverse();
                 for (let item of histInvertido) {
                     somaRecebido += item.valorTotal;
-                    nomesSugeridos.add(item.nome); // Adiciona na lista de sugestões
                     
                     listaHist.innerHTML += `
                         <div class="cliente-item hist-item">
@@ -230,9 +278,12 @@
                     `;
                 }
             }
-            totalRecebidoElem.innerText = `Já Faturado: R$ ${somaRecebido.toFixed(2).replace('.', ',')}`;
+            
+            // Atualiza o texto do faturamento com o nome do mês se estiver filtrado
+            let textoFaturamento = mesSelecionado === 'todos' ? 'Total' : selectMes.options[selectMes.selectedIndex].text;
+            totalRecebidoElem.innerText = `Faturado (${textoFaturamento}): R$ ${somaRecebido.toFixed(2).replace('.', ',')}`;
 
-            // NOVO: Adiciona as sugestões no HTML invisível do campo de texto
+            // --- 4. ALIMENTA O AUTOCOMPLETAR ---
             nomesSugeridos.forEach(nome => {
                 let option = document.createElement('option');
                 option.value = nome;
@@ -277,8 +328,7 @@
         }
 
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-            .catch(err => console.log('Erro no sw', err));
+            navigator.serviceWorker.register('./sw.js').catch(err => console.log('Erro no sw', err));
         }
 
         atualizarTela();
