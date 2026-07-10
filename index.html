@@ -8,7 +8,6 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#e67e22">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     
@@ -18,56 +17,71 @@
             background-color: #fff5e6; 
             color: #333;
             margin: 0;
-            padding: 20px; 
+            padding: 15px; 
             display: flex;
             justify-content: center;
         }
-        .container { width: 100%; max-width: 500px; }
-        h2 { text-align: center; color: #d35400; margin-bottom: 25px; }
-        .card { 
-            background: #ffffff; 
-            padding: 20px; 
-            border-radius: 15px; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05); 
-            margin-bottom: 25px; 
-        }
+        .container { width: 100%; max-width: 500px; padding-bottom: 30px; }
+        h2 { text-align: center; color: #d35400; margin-bottom: 20px; }
+        
+        .card { background: #ffffff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .card h3 { margin-top: 0; color: #444; font-size: 1.1rem; border-bottom: 2px solid #ffeed9; padding-bottom: 10px; }
-        input { 
-            font-family: 'Poppins', sans-serif;
-            padding: 12px; 
-            margin: 8px 0; 
-            width: 100%; 
-            box-sizing: border-box; 
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #fafafa;
-            transition: 0.3s;
+        
+        .card-total { background: linear-gradient(135deg, #e67e22, #d35400); color: white; text-align: center; }
+        .card-total h3 { color: white; border-bottom: none; opacity: 0.9; margin-bottom: 5px; padding-bottom: 0; }
+        .total-valor { font-size: 2.5rem; font-weight: 600; margin: 0; text-shadow: 1px 2px 4px rgba(0,0,0,0.2); }
+
+        input, input[type="file"] { 
+            font-family: 'Poppins', sans-serif; padding: 12px; margin: 8px 0; 
+            width: 100%; box-sizing: border-box; border: 1px solid #ddd; 
+            border-radius: 8px; background-color: #fafafa; 
         }
-        input:focus { border-color: #e67e22; outline: none; background-color: #fff; box-shadow: 0 0 5px rgba(230, 126, 34, 0.3); }
-        button { font-family: 'Poppins', sans-serif; font-weight: 600; padding: 12px; margin-top: 15px; width: 100%; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        input:focus { border-color: #e67e22; outline: none; background-color: #fff; }
+        
+        button { font-family: 'Poppins', sans-serif; font-weight: 600; padding: 12px; width: 100%; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; margin-top: 10px;}
+        
         .btn-add { background-color: #e67e22; color: white; font-size: 1rem; }
-        .btn-add:hover { background-color: #d35400; transform: translateY(-2px); }
-        .cliente-item { background: #fff; padding: 15px; margin-top: 15px; border-radius: 10px; border-left: 5px solid #e67e22; box-shadow: 0 3px 10px rgba(0,0,0,0.03); transition: 0.3s; }
-        .cliente-item:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        .btn-add:hover { background-color: #d35400; }
+        
+        .btn-backup { background-color: #34495e; color: white; margin-bottom: 10px; }
+        .btn-backup:hover { background-color: #2c3e50; }
+
+        .cliente-item { background: #fff; padding: 15px; margin-top: 15px; border-radius: 10px; border-left: 5px solid #e67e22; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .cliente-info { display: flex; justify-content: space-between; align-items: center; }
-        .cliente-info div { line-height: 1.5; }
-        .cliente-nome { font-size: 1.1rem; color: #d35400; }
-        .valor-total { color: #27ae60; font-size: 1.05rem; }
+        .cliente-nome { font-size: 1.1rem; color: #d35400; font-weight: 600;}
+        .valor-total { color: #27ae60; font-size: 1.05rem; font-weight: 600;}
+        
         .btn-pago { background-color: #2ecc71; color: white; padding: 8px 15px; margin-top: 0; width: auto; border-radius: 20px; font-size: 0.9rem; }
-        .btn-pago:hover { background-color: #27ae60; transform: scale(1.05); }
-        .mensagem-vazia { text-align: center; color: #999; font-style: italic; padding: 20px 0; }
+        
+        .hist-item { border-left: 5px solid #2ecc71; opacity: 0.85; background-color: #fcfcfc; }
+        .hist-nome { color: #27ae60; }
+        .mensagem-vazia { text-align: center; color: #999; font-style: italic; padding: 10px 0; font-size: 0.9rem; }
+        
+        .flex-row { display: flex; gap: 10px; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>🥟 Controle de Salgados</h2>
+        <h2>🥟 Salgados da Chef</h2>
+
+        <div class="card card-total">
+            <h3>Total a Receber (Pendentes)</h3>
+            <p class="total-valor" id="totalReceber">R$ 0,00</p>
+        </div>
 
         <div class="card">
             <h3>Nova Venda</h3>
-            <input type="text" id="nomeCliente" placeholder="Nome do Cliente (ex: João)">
-            <input type="number" id="qtdSalgados" placeholder="Quantidade (ex: 5)">
-            <input type="number" id="valorUnidade" placeholder="Valor da Unidade (ex: 5.50)" step="0.01">
+            <!-- Melhoria: O 'list' liga este campo ao datalist abaixo -->
+            <input type="text" id="nomeCliente" placeholder="Nome do Cliente (ex: João)" list="sugestoesClientes" autocomplete="off">
+            
+            <!-- Lista invisível que o navegador usa para gerar as sugestões -->
+            <datalist id="sugestoesClientes"></datalist>
+
+            <div class="flex-row">
+                <input type="number" id="qtdSalgados" placeholder="Qtd (ex: 5)">
+                <input type="number" id="valorUnidade" placeholder="Valor Un. (ex: 5.50)" step="0.01">
+            </div>
             <button class="btn-add" onclick="adicionarVenda()">Adicionar Venda</button>
         </div>
 
@@ -75,20 +89,49 @@
             <h3>Valores a Receber</h3>
             <div id="listaClientes"></div>
         </div>
+
+        <div class="card">
+            <h3>Histórico (Já Recebidos)</h3>
+            <p style="text-align: center; margin: 0; color: #27ae60; font-weight: bold; font-size: 1.2rem;" id="totalRecebidoMes">Já Faturado: R$ 0,00</p>
+            <div id="listaHistorico"></div>
+        </div>
+
+        <div class="card">
+            <h3>Segurança dos Dados</h3>
+            <p style="font-size: 0.85rem; color: #666; margin-top:0;">Faça um backup semanal para não perder as contas caso o telemóvel seja formatado ou o cache limpo.</p>
+            <button class="btn-backup" onclick="fazerBackup()">💾 Baixar Ficheiro de Backup</button>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 5px;">Restaurar backup antigo:</p>
+            <input type="file" id="arquivoBackup" accept=".json" onchange="restaurarBackup(event)">
+        </div>
     </div>
 
     <script>
         let vendas = JSON.parse(localStorage.getItem('vendasSalgados')) || {};
+        let historico = JSON.parse(localStorage.getItem('historicoSalgados')) || [];
+
+        // NOVO: Função que padroniza o texto (remove espaços extras e coloca primeira letra maiúscula)
+        function padronizarNome(texto) {
+            return texto
+                .trim() // Tira espaços do começo e fim
+                .replace(/\s+/g, ' ') // Se tiver 2 espaços juntos no meio, transforma em 1
+                .toLowerCase() // Deixa tudo minúsculo
+                .replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); }); // Deixa a 1ª letra de cada palavra maiúscula
+        }
 
         function adicionarVenda() {
-            let nome = document.getElementById('nomeCliente').value.trim();
+            let nomeBruto = document.getElementById('nomeCliente').value;
             let qtd = parseInt(document.getElementById('qtdSalgados').value);
-            let valor = parseFloat(document.getElementById('valorUnidade').value);
+            let valorInput = document.getElementById('valorUnidade').value.replace(',', '.');
+            let valor = parseFloat(valorInput);
 
-            if (!nome || isNaN(qtd) || isNaN(valor)) {
+            if (!nomeBruto || isNaN(qtd) || isNaN(valor)) {
                 alert("Por favor, preencha todos os campos corretamente.");
                 return;
             }
+
+            // Aplica a padronização antes de salvar!
+            let nome = padronizarNome(nomeBruto);
 
             if (vendas[nome]) {
                 vendas[nome].quantidade += qtd;
@@ -97,55 +140,149 @@
                 vendas[nome] = { quantidade: qtd, valorTotal: (qtd * valor) };
             }
 
-            localStorage.setItem('vendasSalgados', JSON.stringify(vendas));
-            atualizarTela();
+            salvarDados();
             
             document.getElementById('nomeCliente').value = '';
             document.getElementById('qtdSalgados').value = '';
         }
 
         function quitarDivida(nomeDoCliente) {
-            if (confirm(`Tem certeza que deseja dar baixa no pagamento de ${nomeDoCliente}?`)) {
+            if (confirm(`Confirmar o recebimento de ${nomeDoCliente}?`)) {
+                let dataAtual = new Date().toLocaleDateString('pt-BR');
+                historico.push({
+                    nome: nomeDoCliente,
+                    quantidade: vendas[nomeDoCliente].quantidade,
+                    valorTotal: vendas[nomeDoCliente].valorTotal,
+                    data: dataAtual
+                });
+
                 delete vendas[nomeDoCliente];
-                localStorage.setItem('vendasSalgados', JSON.stringify(vendas));
-                atualizarTela();
+                salvarDados();
             }
+        }
+
+        function salvarDados() {
+            localStorage.setItem('vendasSalgados', JSON.stringify(vendas));
+            localStorage.setItem('historicoSalgados', JSON.stringify(historico));
+            atualizarTela();
         }
 
         function atualizarTela() {
             let lista = document.getElementById('listaClientes');
+            let listaHist = document.getElementById('listaHistorico');
+            let totalReceberElem = document.getElementById('totalReceber');
+            let totalRecebidoElem = document.getElementById('totalRecebidoMes');
+            let datalistSugestoes = document.getElementById('sugestoesClientes');
+
             lista.innerHTML = ''; 
+            listaHist.innerHTML = '';
+            datalistSugestoes.innerHTML = ''; // Limpa as sugestões para recriar
+
+            let somaReceber = 0;
+            let somaRecebido = 0;
+            
+            // NOVO: Coleta todos os nomes únicos (dos pendentes e do histórico) para criar as sugestões
+            let nomesSugeridos = new Set();
 
             if (Object.keys(vendas).length === 0) {
                 lista.innerHTML = '<p class="mensagem-vazia">Nenhuma dívida pendente. Que venham mais vendas! 🚀</p>';
-                return;
-            }
-
-            for (let cliente in vendas) {
-                let dados = vendas[cliente];
-                lista.innerHTML += `
-                    <div class="cliente-item">
-                        <div class="cliente-info">
-                            <div>
-                                <strong class="cliente-nome">${cliente}</strong> <br>
-                                Salgados: ${dados.quantidade} un. <br>
-                                <strong class="valor-total">Total: R$ ${dados.valorTotal.toFixed(2)}</strong>
+            } else {
+                for (let cliente in vendas) {
+                    let dados = vendas[cliente];
+                    somaReceber += dados.valorTotal;
+                    nomesSugeridos.add(cliente); // Adiciona na lista de sugestões
+                    
+                    lista.innerHTML += `
+                        <div class="cliente-item">
+                            <div class="cliente-info">
+                                <div>
+                                    <span class="cliente-nome">${cliente}</span> <br>
+                                    <small>Salgados: ${dados.quantidade} un.</small> <br>
+                                    <span class="valor-total">R$ ${dados.valorTotal.toFixed(2).replace('.', ',')}</span>
+                                </div>
+                                <button class="btn-pago" onclick="quitarDivida('${cliente}')">✅ Receber</button>
                             </div>
-                            <button class="btn-pago" onclick="quitarDivida('${cliente}')">✅ Recebido</button>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
             }
+            totalReceberElem.innerText = `R$ ${somaReceber.toFixed(2).replace('.', ',')}`;
+
+            if (historico.length === 0) {
+                listaHist.innerHTML = '<p class="mensagem-vazia">Nenhum recebimento registado ainda.</p>';
+            } else {
+                let histInvertido = [...historico].reverse();
+                for (let item of histInvertido) {
+                    somaRecebido += item.valorTotal;
+                    nomesSugeridos.add(item.nome); // Adiciona na lista de sugestões
+                    
+                    listaHist.innerHTML += `
+                        <div class="cliente-item hist-item">
+                            <div class="cliente-info">
+                                <div>
+                                    <span class="cliente-nome hist-nome">${item.nome}</span> <br>
+                                    <small>${item.data} - ${item.quantidade} un.</small> <br>
+                                    <span class="valor-total" style="color:#666;">R$ ${item.valorTotal.toFixed(2).replace('.', ',')}</span>
+                                </div>
+                                <span style="font-size: 1.3rem;">💸</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            totalRecebidoElem.innerText = `Já Faturado: R$ ${somaRecebido.toFixed(2).replace('.', ',')}`;
+
+            // NOVO: Adiciona as sugestões no HTML invisível do campo de texto
+            nomesSugeridos.forEach(nome => {
+                let option = document.createElement('option');
+                option.value = nome;
+                datalistSugestoes.appendChild(option);
+            });
+        }
+
+        function fazerBackup() {
+            let dadosCompletos = { pendentes: vendas, pagos: historico };
+            let dataStr = JSON.stringify(dadosCompletos);
+            let blob = new Blob([dataStr], { type: "application/json" });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement("a");
+            a.href = url;
+            a.download = "backup-salgados-" + new Date().toISOString().slice(0,10) + ".json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function restaurarBackup(event) {
+            let arquivo = event.target.files[0];
+            if (!arquivo) return;
+            let leitor = new FileReader();
+            leitor.onload = function(e) {
+                try {
+                    let dadosRestaurados = JSON.parse(e.target.result);
+                    if (dadosRestaurados.pendentes) {
+                        vendas = dadosRestaurados.pendentes;
+                        historico = dadosRestaurados.pagos || [];
+                        salvarDados();
+                        alert("Backup restaurado com sucesso! Os seus dados voltaram.");
+                        document.getElementById('arquivoBackup').value = '';
+                    } else {
+                        alert("Ficheiro de backup inválido.");
+                    }
+                } catch (erro) {
+                    alert("Erro ao ler o ficheiro. Certifique-se de que escolheu o ficheiro correto.");
+                }
+            };
+            leitor.readAsText(arquivo);
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+            .catch(err => console.log('Erro no sw', err));
         }
 
         atualizarTela();
-
-        // CÓDIGO DO ATIVADOR DO APLICATIVO (Service Worker)
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-            .then(() => console.log('Aplicação Pronta (Service Worker Registrado)'))
-            .catch(err => console.log('Erro ao registar o ativador', err));
-        }
     </script>
+
 </body>
 </html>
