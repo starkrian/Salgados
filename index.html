@@ -31,7 +31,6 @@
         .card-total h3 { color: white; border-bottom: none; opacity: 0.9; margin-bottom: 5px; padding-bottom: 0; }
         .total-valor { font-size: 2.5rem; font-weight: 600; margin: 0; text-shadow: 1px 2px 4px rgba(0,0,0,0.2); }
 
-        /* NOVO: CSS ajustado para o filtro (select) */
         input, select, input[type="file"] { 
             font-family: 'Poppins', sans-serif; padding: 12px; margin: 8px 0; 
             width: 100%; box-sizing: border-box; border: 1px solid #ddd; 
@@ -94,9 +93,7 @@
         <div class="card">
             <div class="cabecalho-historico">
                 <h3>Histórico</h3>
-                <select id="filtroMes" onchange="atualizarTela()">
-                    <option value="todos">Todos</option>
-                </select>
+                <select id="filtroMes" onchange="atualizarTela()"></select>
             </div>
             
             <p style="text-align: center; margin: 0; color: #27ae60; font-weight: bold; font-size: 1.2rem;" id="totalRecebidoMes">Faturado: R$ 0,00</p>
@@ -175,8 +172,10 @@
             let totalReceberElem = document.getElementById('totalReceber');
             let totalRecebidoElem = document.getElementById('totalRecebidoMes');
             let datalistSugestoes = document.getElementById('sugestoesClientes');
-            let selectMes = document.getElementById('filtroMes'); // Captura o filtro de meses
+            let selectMes = document.getElementById('filtroMes');
 
+            let mesSelecionadoAnterior = selectMes.value;
+            selectMes.innerHTML = ''; // Limpa o select
             lista.innerHTML = ''; 
             listaHist.innerHTML = '';
             datalistSugestoes.innerHTML = '';
@@ -212,44 +211,54 @@
 
             // --- 2. PREPARA DADOS DO HISTÓRICO ---
             historico.forEach(item => {
-                nomesSugeridos.add(item.nome); // Garante que clientes antigos continuem no autocomplete
+                nomesSugeridos.add(item.nome); 
                 let partes = item.data.split('/');
                 if(partes.length === 3) {
-                    mesesDisponiveis.add(partes[1] + '/' + partes[2]); // Extrai Mês/Ano (Ex: 07/2026)
+                    mesesDisponiveis.add(partes[1] + '/' + partes[2]); 
                 }
             });
 
-            // Cria as opções do filtro com os meses encontrados
-            let mesSelecionado = selectMes.value || 'todos';
-            selectMes.innerHTML = '<option value="todos">Todos</option>';
             const nomesDosMeses = {'01':'Jan', '02':'Fev', '03':'Mar', '04':'Abr', '05':'Mai', '06':'Jun', '07':'Jul', '08':'Ago', '09':'Set', '10':'Out', '11':'Nov', '12':'Dez'};
             
-            // Ordena os meses do mais recente para o mais antigo
             let mesesArray = Array.from(mesesDisponiveis).sort((a, b) => {
                 let [mA, aA] = a.split('/');
                 let [mB, aB] = b.split('/');
                 return new Date(aB, mB - 1) - new Date(aA, mA - 1);
             });
 
-            mesesArray.forEach(mesAno => {
-                let [m, a] = mesAno.split('/');
-                let option = document.createElement('option');
-                option.value = mesAno;
-                option.text = `${nomesDosMeses[m]}/${a}`;
-                selectMes.appendChild(option);
-            });
+            let mesSelecionado = "";
 
-            // Mantém a seleção que o usuário fez antes de atualizar a tela
-            if (mesesDisponiveis.has(mesSelecionado) || mesSelecionado === 'todos') {
-                selectMes.value = mesSelecionado;
+            if (mesesArray.length === 0) {
+                // Se não houver histórico, cria opção bloqueada
+                let option = document.createElement('option');
+                option.value = "";
+                option.text = "Sem vendas";
+                selectMes.appendChild(option);
+                selectMes.disabled = true;
             } else {
-                selectMes.value = 'todos';
-                mesSelecionado = 'todos';
+                // Se houver meses, lista-os
+                selectMes.disabled = false;
+                mesesArray.forEach(mesAno => {
+                    let [m, a] = mesAno.split('/');
+                    let option = document.createElement('option');
+                    option.value = mesAno;
+                    option.text = `${nomesDosMeses[m]}/${a}`;
+                    selectMes.appendChild(option);
+                });
+
+                // Mantém o mês que a pessoa estava olhando ou pula para o mais recente
+                if (mesesDisponiveis.has(mesSelecionadoAnterior)) {
+                    selectMes.value = mesSelecionadoAnterior;
+                    mesSelecionado = mesSelecionadoAnterior;
+                } else {
+                    selectMes.value = mesesArray[0];
+                    mesSelecionado = mesesArray[0];
+                }
             }
 
             // --- 3. EXIBE HISTÓRICO FILTRADO ---
-            let historicoFiltrado = historico;
-            if (mesSelecionado !== 'todos') {
+            let historicoFiltrado = [];
+            if (mesSelecionado !== "") {
                 historicoFiltrado = historico.filter(item => {
                     let partes = item.data.split('/');
                     return (partes[1] + '/' + partes[2]) === mesSelecionado;
@@ -279,8 +288,7 @@
                 }
             }
             
-            // Atualiza o texto do faturamento com o nome do mês se estiver filtrado
-            let textoFaturamento = mesSelecionado === 'todos' ? 'Total' : selectMes.options[selectMes.selectedIndex].text;
+            let textoFaturamento = mesSelecionado !== "" ? selectMes.options[selectMes.selectedIndex].text : '-';
             totalRecebidoElem.innerText = `Faturado (${textoFaturamento}): R$ ${somaRecebido.toFixed(2).replace('.', ',')}`;
 
             // --- 4. ALIMENTA O AUTOCOMPLETAR ---
@@ -291,6 +299,7 @@
             });
         }
 
+        // --- FUNÇÕES DE BACKUP (Sem alterações) ---
         function fazerBackup() {
             let dadosCompletos = { pendentes: vendas, pagos: historico };
             let dataStr = JSON.stringify(dadosCompletos);
