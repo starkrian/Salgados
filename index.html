@@ -57,6 +57,19 @@
         .hist-nome { color: #27ae60; }
         .mensagem-vazia { text-align: center; color: #999; font-style: italic; padding: 10px 0; font-size: 0.9rem; }
         
+        /* NOVO: Estilo para o botão de apagar do histórico */
+        .btn-excluir { 
+            background-color: transparent; 
+            color: #e74c3c; 
+            border: 1px solid #e74c3c; 
+            padding: 6px 12px; 
+            margin: 0; 
+            width: auto; 
+            border-radius: 8px; 
+            font-size: 1rem; 
+        }
+        .btn-excluir:hover { background-color: #e74c3c; color: white; }
+
         .flex-row { display: flex; gap: 10px; }
         .cabecalho-historico { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ffeed9; padding-bottom: 10px; margin-bottom: 15px; }
         .cabecalho-historico h3 { border: none; padding: 0; margin: 0; }
@@ -102,8 +115,8 @@
 
         <div class="card">
             <h3>Segurança dos Dados</h3>
-            <p style="font-size: 0.85rem; color: #666; margin-top:0;">Faça um backup semanal para não perder as contas caso o telemóvel seja formatado ou o cache limpo.</p>
-            <button class="btn-backup" onclick="fazerBackup()">💾 Baixar Ficheiro de Backup</button>
+            <p style="font-size: 0.85rem; color: #666; margin-top:0;">Faça um backup semanal para não perder as contas caso o celular seja formatado ou o cache limpo.</p>
+            <button class="btn-backup" onclick="fazerBackup()">💾 Baixar Arquivo de Backup</button>
             <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
             <p style="font-size: 0.85rem; color: #666; margin-bottom: 5px;">Restaurar backup antigo:</p>
             <input type="file" id="arquivoBackup" accept=".json" onchange="restaurarBackup(event)">
@@ -160,6 +173,15 @@
             }
         }
 
+        // NOVO: Função para excluir item do histórico
+        function excluirHistorico(indexOriginal) {
+            if (confirm("Tem certeza que deseja apagar este registro do histórico? Esse valor sairá do cálculo do seu faturamento.")) {
+                // Remove 1 item a partir da posição exata dele no histórico
+                historico.splice(indexOriginal, 1);
+                salvarDados();
+            }
+        }
+
         function salvarDados() {
             localStorage.setItem('vendasSalgados', JSON.stringify(vendas));
             localStorage.setItem('historicoSalgados', JSON.stringify(historico));
@@ -175,7 +197,7 @@
             let selectMes = document.getElementById('filtroMes');
 
             let mesSelecionadoAnterior = selectMes.value;
-            selectMes.innerHTML = ''; // Limpa o select
+            selectMes.innerHTML = ''; 
             lista.innerHTML = ''; 
             listaHist.innerHTML = '';
             datalistSugestoes.innerHTML = '';
@@ -210,7 +232,7 @@
             totalReceberElem.innerText = `R$ ${somaReceber.toFixed(2).replace('.', ',')}`;
 
             // --- 2. PREPARA DADOS DO HISTÓRICO ---
-            historico.forEach(item => {
+            historico.forEach((item) => {
                 nomesSugeridos.add(item.nome); 
                 let partes = item.data.split('/');
                 if(partes.length === 3) {
@@ -229,14 +251,12 @@
             let mesSelecionado = "";
 
             if (mesesArray.length === 0) {
-                // Se não houver histórico, cria opção bloqueada
                 let option = document.createElement('option');
                 option.value = "";
                 option.text = "Sem vendas";
                 selectMes.appendChild(option);
                 selectMes.disabled = true;
             } else {
-                // Se houver meses, lista-os
                 selectMes.disabled = false;
                 mesesArray.forEach(mesAno => {
                     let [m, a] = mesAno.split('/');
@@ -246,7 +266,6 @@
                     selectMes.appendChild(option);
                 });
 
-                // Mantém o mês que a pessoa estava olhando ou pula para o mais recente
                 if (mesesDisponiveis.has(mesSelecionadoAnterior)) {
                     selectMes.value = mesSelecionadoAnterior;
                     mesSelecionado = mesSelecionadoAnterior;
@@ -257,9 +276,14 @@
             }
 
             // --- 3. EXIBE HISTÓRICO FILTRADO ---
+            // NOVO: Adiciona o index original para a função de apagar não se perder com os filtros
+            let historicoComIndex = historico.map((item, index) => {
+                return { ...item, indexOriginal: index };
+            });
+
             let historicoFiltrado = [];
             if (mesSelecionado !== "") {
-                historicoFiltrado = historico.filter(item => {
+                historicoFiltrado = historicoComIndex.filter(item => {
                     let partes = item.data.split('/');
                     return (partes[1] + '/' + partes[2]) === mesSelecionado;
                 });
@@ -267,7 +291,7 @@
 
             let somaRecebido = 0;
             if (historicoFiltrado.length === 0) {
-                listaHist.innerHTML = '<p class="mensagem-vazia">Nenhum recebimento registado neste período.</p>';
+                listaHist.innerHTML = '<p class="mensagem-vazia">Nenhum recebimento registrado neste período.</p>';
             } else {
                 let histInvertido = [...historicoFiltrado].reverse();
                 for (let item of histInvertido) {
@@ -281,7 +305,7 @@
                                     <small>${item.data} - ${item.quantidade} un.</small> <br>
                                     <span class="valor-total" style="color:#666;">R$ ${item.valorTotal.toFixed(2).replace('.', ',')}</span>
                                 </div>
-                                <span style="font-size: 1.3rem;">💸</span>
+                                <button class="btn-excluir" onclick="excluirHistorico(${item.indexOriginal})" title="Apagar Registro">🗑️</button>
                             </div>
                         </div>
                     `;
@@ -299,7 +323,7 @@
             });
         }
 
-        // --- FUNÇÕES DE BACKUP (Sem alterações) ---
+        // --- FUNÇÕES DE BACKUP ---
         function fazerBackup() {
             let dadosCompletos = { pendentes: vendas, pagos: historico };
             let dataStr = JSON.stringify(dadosCompletos);
@@ -324,13 +348,13 @@
                         vendas = dadosRestaurados.pendentes;
                         historico = dadosRestaurados.pagos || [];
                         salvarDados();
-                        alert("Backup restaurado com sucesso! Os seus dados voltaram.");
+                        alert("Backup restaurado com sucesso! Seus dados voltaram.");
                         document.getElementById('arquivoBackup').value = '';
                     } else {
-                        alert("Ficheiro de backup inválido.");
+                        alert("Arquivo de backup inválido.");
                     }
                 } catch (erro) {
-                    alert("Erro ao ler o ficheiro. Certifique-se de que escolheu o ficheiro correto.");
+                    alert("Erro ao ler o arquivo. Certifique-se de que escolheu o arquivo correto.");
                 }
             };
             leitor.readAsText(arquivo);
